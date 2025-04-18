@@ -3,69 +3,26 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { Eye, EyeOff, Mail, Lock } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/toast-provider"
 import { Spinner } from "@/components/ui/spinner"
-import Image from "next/image"
-import { signInWithGoogle } from "@/services/auth"
 import Link from "next/link"
+import { useAuth } from "@/contexts/auth-context"
+import { Eye, EyeOff, Mail, Lock } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const { showToast } = useToast()
-  const router = useRouter()
+  const { signInWithGoogle, isLoading: isAuthLoading } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!email || !password) {
-      showToast("Please enter both email and password", "error")
-      return
-    }
-
-    setIsLoading(true)
-
-    // Simulate API call
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // For demo purposes, any email/password combination works
-      // In a real app, you would validate credentials with your backend
-
-      // Store user info in localStorage or a state management solution
-      localStorage.setItem("userEmail", email)
-      localStorage.setItem("isLoggedIn", "true")
-
-      showToast("Login successful", "success")
-
-      // Redirect to dashboard
-      router.push("/")
-    } catch (error) {
-      showToast("Login failed. Please try again.", "error")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleGoogleLogin = async () => {
-    setIsGoogleLoading(true)
-    try {
-      await signInWithGoogle()
-      showToast("Login successful", "success")
-      router.push("/")
-    } catch (error) {
-      showToast("Google login failed. Please try again.", "error")
-    } finally {
-      setIsGoogleLoading(false)
-    }
+    showToast("Email/password login not implemented yet. Please use Google Sign-In.", "info")
   }
 
   return (
@@ -83,9 +40,9 @@ export default function LoginPage() {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="relative w-24 h-24 mb-4"
+                className="mb-4"
               >
-                <Image src="/logo.png" alt="SortFlow Logo" fill className="object-contain" priority />
+                <Image src="/logo.png" alt="SortFlow Logo" width={80} height={80} className="h-20 w-20" />
               </motion.div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-center">Welcome to SortFlow</h1>
               <p className="text-gray-500 dark:text-gray-400 mt-2 text-center">Login to continue to your inbox</p>
@@ -96,11 +53,11 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full flex justify-center items-center gap-2 py-6 border-gray-300 dark:border-gray-700"
-                onClick={handleGoogleLogin}
-                disabled={isGoogleLoading}
+                className="w-full flex justify-center items-center gap-2 py-6 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                onClick={signInWithGoogle}
+                disabled={isAuthLoading}
               >
-                {isGoogleLoading ? (
+                {isAuthLoading ? (
                   <Spinner size="sm" className="mr-2" />
                 ) : (
                   <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -122,7 +79,7 @@ export default function LoginPage() {
                     />
                   </svg>
                 )}
-                <span>{isGoogleLoading ? "Signing in..." : "Continue with Google"}</span>
+                <span className="ml-2 font-medium">{isAuthLoading ? "Signing in..." : "Sign in with Google"}</span>
               </Button>
 
               <div className="relative">
@@ -136,39 +93,39 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Email
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
+                    <input
                       id="email"
                       type="email"
-                      placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder="you@example.com"
                       disabled={isLoading}
                       required
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Password
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
+                    <input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
+                      className="w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder="••••••••"
                       disabled={isLoading}
                       required
                     />
@@ -183,51 +140,26 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                      Remember me
-                    </label>
-                  </div>
-
-                  <div className="text-sm">
-                    <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
-                      Forgot password?
-                    </a>
-                  </div>
-                </div>
-
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    type="submit"
-                    className="w-full flex justify-center py-6 bg-indigo-600 hover:bg-indigo-700"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Spinner size="sm" className="mr-2" />
-                        Logging in...
-                      </>
-                    ) : (
-                      "Sign in"
-                    )}
-                  </Button>
-                </motion.div>
+                <Button
+                  type="submit"
+                  className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Logging in...
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
+                </Button>
               </form>
 
-              <div className="mt-6 text-center">
+              <div className="text-center mt-4">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Don't have an account?{" "}
-                  <Link
-                    href="/signup"
-                    className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                  >
+                  <Link href="/signup" className="text-blue-600 hover:text-blue-700 dark:text-blue-500 font-medium">
                     Sign up
                   </Link>
                 </p>

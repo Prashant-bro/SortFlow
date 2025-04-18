@@ -1,65 +1,114 @@
 import type { User } from "@/types/user"
 
-// This is a mock implementation - in a real app, you would use Firebase Auth or a similar service
+// This is a mock implementation - in a real app, you would use Firebase Auth or NextAuth.js
 export async function signInWithGoogle(): Promise<User> {
   // Simulate a popup window and authentication process
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     // Simulate network delay
     setTimeout(() => {
-      // Mock successful authentication
-      const user: User = {
-        id: "google-user-123",
-        email: "user@gmail.com",
-        name: "Demo User",
-        photoURL: "https://ui-avatars.com/api/?name=Demo+User&background=random",
-        isProUser: false,
-        accounts: [
-          {
-            id: "account-1",
-            email: "user@gmail.com",
-            isProUser: false,
-            name: "Demo User",
-            photoURL: "https://ui-avatars.com/api/?name=Demo+User&background=random",
-          },
-        ],
+      try {
+        // Mock successful authentication
+        const user: User = {
+          id: "google-user-123",
+          email: "user@gmail.com",
+          name: "Demo User",
+          photoURL: "https://ui-avatars.com/api/?name=Demo+User&background=random",
+          isProUser: false,
+          accounts: [
+            {
+              id: "account-1",
+              email: "user@gmail.com",
+              isProUser: false,
+              name: "Demo User",
+              photoURL: "https://ui-avatars.com/api/?name=Demo+User&background=random",
+            },
+          ],
+        }
+
+        // Store user in localStorage
+        localStorage.setItem("user", JSON.stringify(user))
+        localStorage.setItem("isLoggedIn", "true")
+
+        resolve(user)
+      } catch (error) {
+        reject(error)
       }
+    }, 1500)
+  })
+}
 
-      // Store user in localStorage
-      localStorage.setItem("user", JSON.stringify(user))
-      localStorage.setItem("isLoggedIn", "true")
+export async function signInWithEmailPassword(email: string, password: string): Promise<User> {
+  // Simulate network delay
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      try {
+        // In a real app, you would validate credentials with your backend
+        // For demo purposes, we'll use a simple validation
+        if (email === "user@example.com" && password === "password") {
+          // Mock successful authentication
+          const user: User = {
+            id: "email-user-123",
+            email: email,
+            name: email.split("@")[0],
+            photoURL: `https://ui-avatars.com/api/?name=${email.split("@")[0]}&background=random`,
+            isProUser: false,
+            accounts: [
+              {
+                id: "account-1",
+                email: email,
+                isProUser: false,
+                name: email.split("@")[0],
+                photoURL: `https://ui-avatars.com/api/?name=${email.split("@")[0]}&background=random`,
+              },
+            ],
+          }
 
-      resolve(user)
+          // Store user in localStorage
+          localStorage.setItem("user", JSON.stringify(user))
+          localStorage.setItem("isLoggedIn", "true")
+
+          resolve(user)
+        } else {
+          reject(new Error("Invalid credentials"))
+        }
+      } catch (error) {
+        reject(error)
+      }
     }, 1500)
   })
 }
 
 export async function signUpWithEmailPassword(email: string, password: string): Promise<User> {
   // Simulate network delay
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     setTimeout(() => {
-      // Mock successful signup
-      const user: User = {
-        id: "email-user-456",
-        email: email,
-        name: email.split("@")[0],
-        photoURL: `https://ui-avatars.com/api/?name=${email.split("@")[0]}&background=random`,
-        isProUser: false,
-        accounts: [
-          {
-            id: "account-1",
-            email: email,
-            isProUser: false,
-            name: email.split("@")[0],
-            photoURL: `https://ui-avatars.com/api/?name=${email.split("@")[0]}&background=random`,
-          },
-        ],
+      try {
+        // Mock successful signup
+        const user: User = {
+          id: "email-user-456",
+          email: email,
+          name: email.split("@")[0],
+          photoURL: `https://ui-avatars.com/api/?name=${email.split("@")[0]}&background=random`,
+          isProUser: false,
+          accounts: [
+            {
+              id: "account-1",
+              email: email,
+              isProUser: false,
+              name: email.split("@")[0],
+              photoURL: `https://ui-avatars.com/api/?name=${email.split("@")[0]}&background=random`,
+            },
+          ],
+        }
+
+        // Store user in localStorage
+        localStorage.setItem("user", JSON.stringify(user))
+        localStorage.setItem("isLoggedIn", "true")
+
+        resolve(user)
+      } catch (error) {
+        reject(error)
       }
-
-      // Store user in localStorage
-      localStorage.setItem("user", JSON.stringify(user))
-      localStorage.setItem("isLoggedIn", "true")
-
-      resolve(user)
     }, 1500)
   })
 }
@@ -69,6 +118,7 @@ export async function signOut(): Promise<void> {
     // Clear localStorage
     localStorage.removeItem("user")
     localStorage.removeItem("isLoggedIn")
+    localStorage.removeItem("userEmail")
 
     resolve()
   })
@@ -84,6 +134,11 @@ export async function getCurrentUser(): Promise<User | null> {
     console.error("Error parsing user from localStorage", error)
     return null
   }
+}
+
+export async function isUserLoggedIn(): Promise<boolean> {
+  const isLoggedIn = localStorage.getItem("isLoggedIn")
+  return isLoggedIn === "true"
 }
 
 export async function addAccount(email: string): Promise<User> {
@@ -176,4 +231,25 @@ export async function removeAccount(accountId: string): Promise<User> {
   localStorage.setItem("user", JSON.stringify(updatedUser))
 
   return updatedUser
+}
+
+// Add team collaboration functions
+export async function inviteTeamMember(email: string): Promise<boolean> {
+  // In a real app, you would send an invitation email
+  // For demo purposes, we'll just simulate a successful invitation
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true)
+    }, 1500)
+  })
+}
+
+export async function removeTeamMember(email: string): Promise<boolean> {
+  // In a real app, you would remove the team member from your database
+  // For demo purposes, we'll just simulate a successful removal
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true)
+    }, 500)
+  })
 }

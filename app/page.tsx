@@ -22,9 +22,9 @@ import { PricingModal } from "@/components/pricing-modal"
 import { Badge } from "@/components/ui/badge"
 import { AccountSwitcher } from "@/components/account-switcher"
 import { PricingSection } from "@/components/pricing-section"
-import type { User } from "@/types/user"
-import { getCurrentUser, signOut, switchAccount, removeAccount } from "@/services/auth"
 import { encryptMessage, decryptMessage } from "@/services/encryption"
+import { TeamCollaboration } from "@/components/team-collaboration"
+import { useAuth } from "@/contexts/auth-context"
 
 // Sample email data with expanded properties
 const sampleEmails: Email[] = [
@@ -197,8 +197,6 @@ function MoodStatistics({
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true)
   const [emails, setEmails] = useState<Email[]>(sampleEmails)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
   const [selectedEmailId, setSelectedEmailId] = useState<number | null>(null)
   const [currentFolder, setCurrentFolder] = useState<EmailFolder>("Inbox")
   const [searchQuery, setSearchQuery] = useState("")
@@ -216,10 +214,13 @@ export default function Home() {
   const [isReplying, setIsReplying] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [isFolderChanging, setIsFolderChanging] = useState(false)
-  const [isAccountSwitching, setIsAccountSwitching] = useState(false)
 
   // Update the sidebar state management to track if it's open or collapsed
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+  // Auth context
+  const { isAuthenticated, user, logout, isLoading: isAuthLoading } = useAuth()
+  const router = useRouter()
 
   // Calculate folder counts
   const folderCounts = emails.reduce(
@@ -271,52 +272,11 @@ export default function Home() {
     )
   }
 
-  const router = useRouter()
-
   const handleLogout = async () => {
     try {
-      await signOut()
-      setUser(null)
-      setIsLoggedIn(false)
-      router.push("/login")
-      showToast("Logged out successfully", "info")
+      await logout()
     } catch (error) {
       showToast("Failed to log out", "error")
-    }
-  }
-
-  const handleSwitchAccount = async (accountId: string) => {
-    setIsAccountSwitching(true)
-    try {
-      const updatedUser = await switchAccount(accountId)
-      setUser(updatedUser)
-      showToast(`Switched to ${updatedUser.email}`, "success")
-    } catch (error) {
-      showToast("Failed to switch account", "error")
-    } finally {
-      setIsAccountSwitching(false)
-    }
-  }
-
-  const handleAddAccount = () => {
-    // In a real app, this would open a dialog to add a new account
-    // For demo purposes, we'll just add a mock account
-    showToast("Add account functionality coming soon", "info")
-  }
-
-  const handleRemoveAccount = async (accountId: string) => {
-    try {
-      const updatedUser = await removeAccount(accountId)
-      setUser(updatedUser)
-      showToast("Account removed successfully", "success")
-    } catch (error) {
-      if (error instanceof Error && error.message === "No accounts left") {
-        setUser(null)
-        setIsLoggedIn(false)
-        router.push("/login")
-      } else {
-        showToast("Failed to remove account", "error")
-      }
     }
   }
 
@@ -460,25 +420,11 @@ export default function Home() {
   }
 
   const handleUpgradeToPro = (plan: "monthly" | "yearly") => {
-    if (!user) return
-
     // In a real app, this would handle payment processing
-    // For demo purposes, we'll just update the user's pro status
-    const updatedUser: User = {
-      ...user,
-      isProUser: true,
-      accounts: user.accounts.map((account) =>
-        account.id === user.activeAccountId ? { ...account, isProUser: true } : account,
-      ),
-    }
-
-    setUser(updatedUser)
-    localStorage.setItem("user", JSON.stringify(updatedUser))
-
+    // For demo purposes, we'll just show a toast
+    showToast(`Upgraded to Pro (${plan}) successfully!`, "success")
     setIsPricingOpen(false)
     setShowPricingSection(false)
-
-    showToast(`Upgraded to Pro (${plan}) successfully!`, "success")
   }
 
   // Check for passed deadlines and move emails to trash
@@ -515,28 +461,12 @@ export default function Home() {
     }
   }, [selectedEmailId])
 
-  // Check if user is logged in
+  // Redirect to login if not authenticated
   useEffect(() => {
-    const checkUser = async () => {
-      setIsLoading(true)
-      try {
-        const user = await getCurrentUser()
-        if (user) {
-          setUser(user)
-          setIsLoggedIn(true)
-        } else {
-          router.push("/login")
-        }
-      } catch (error) {
-        console.error("Error checking user:", error)
-        router.push("/login")
-      } finally {
-        setIsLoading(false)
-      }
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push("/login")
     }
-
-    checkUser()
-  }, [router])
+  }, [isAuthenticated, isAuthLoading, router])
 
   // Decrypt messages when displayed
   useEffect(() => {
@@ -572,6 +502,27 @@ export default function Home() {
     setShowSplash(false)
   }
 
+  // If still loading auth, show a loading spinner
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  // Dummy functions for handleSwitchAccount and handleAddAccount
+  const handleSwitchAccount = () => {
+    console.log("Switching account")
+  }
+
+  const handleAddAccount = () => {
+    console.log("Adding account")
+  }
+
+  // Dummy variable for isLoggedIn
+  const isLoggedIn = isAuthenticated
+
   return (
     <>
       {/* Splash Screen */}
@@ -592,7 +543,7 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3">
-              {!isLoggedIn ? (
+              {!isAuthenticated ? (
                 <Button onClick={() => router.push("/login")}>Login</Button>
               ) : (
                 <div className="flex items-center gap-3">
@@ -671,6 +622,13 @@ export default function Home() {
                       Back to Inbox
                     </Button>
                   </div>
+                </div>
+              )}
+
+              {/* Team Collaboration Section */}
+              {!showPricingSection && user && (
+                <div className="mb-8">
+                  <TeamCollaboration isProUser={user.isProUser} userEmail={user.email} />
                 </div>
               )}
 
