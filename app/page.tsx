@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { AnimatePresence } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -25,7 +24,6 @@ import { PricingSection } from "@/components/pricing-section"
 import { encryptMessage, decryptMessage } from "@/services/encryption"
 import { TeamCollaboration } from "@/components/team-collaboration"
 import { useAuth } from "@/contexts/auth-context"
-
 // Sample email data with expanded properties
 const sampleEmails: Email[] = [
   {
